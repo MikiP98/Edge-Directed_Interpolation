@@ -62,8 +62,6 @@ def _multichannel_multiprocess(
 
     w, h, channels = img.shape
 
-    new_img = np.zeros((round(w * s), round(h * s), channels), dtype=img.dtype)
-
     if multiprocess:
         # Use multiprocessing with specified mode
         if mode_override is None:
@@ -76,14 +74,12 @@ def _multichannel_multiprocess(
             print(f"{len(args)=}; {len(mp_args[0])=}")
             results = pool.map(function, mp_args)
 
-        # Unpack results
-        for i, result in enumerate(results):
-            new_img[:, :, i] = result
+        # Parse results
+        new_img = np.stack(results, axis=2)
 
     else:
         # No multiprocessing
-        for i in range(channels):
-            new_img[:, :, i] = function(img[:, :, i], *args)
+        new_img = np.stack([function(img[:, :, i], *args) for i in range(channels)], axis=2)
 
     return new_img
 

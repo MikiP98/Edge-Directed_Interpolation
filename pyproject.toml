@@ -1,0 +1,39 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+#dynamic = ["version"]
+version = "1.1.0"
+name = "py-nedi"
+dependencies = [
+    "numpy",
+    "opencv-python"
+]
+authors = [
+    {name = "Leying Hu (Kirstihly)", email="hu.leying@columbia.edu"},
+]
+maintainers = [
+    {name = "Mikołaj Pokora", email = "pokora.mikolaj@gmail.com"},
+]
+description = "New Edge-Directed Interpolation"
+readme = "README.md"
+keywords = [
+    "new",
+    "edge",
+    "directed",
+    "interpolation",
+    "image",
+    "scale",
+    "upscale",
+    "scaling",
+    "edi",
+    "nedi"
+]
+
+[project.urls]
+Repository = "https://github.com/MikiP98/Edge-Directed_Interpolation"
+Issues = "https://github.com/Kirstihly/Edge-Directed_Interpolation/issues"
+
+[project.scripts]
+nedi_process = "py_nedi.edi:_edi_cli"

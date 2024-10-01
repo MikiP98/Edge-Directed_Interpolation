@@ -3,7 +3,7 @@ import argparse
 import cv2
 import os
 
-from py_nedi.edi import (
+from py_nedi import (
     edi_predict,
     edi_predict_multichannel
 )

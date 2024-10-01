@@ -6,10 +6,7 @@ from py_nedi.edi import (
     edi_upscale_multichannel,
     edi_predict,
     _edi_predict_channel,
-    edi_predict_multichannel,
-    _edi_cli,
-    _cv2_saving_options,
-    _cli_process_file
+    edi_predict_multichannel
 )
 
 __version__ = "1.1.0"

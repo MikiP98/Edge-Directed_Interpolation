@@ -10,6 +10,11 @@ from py_nedi import (
 
 
 def _edi_cli():
+    """
+    This function is the main entry point for the NEDI command-line interface.
+    It parses the command-line arguments and then processes the files accordingly.
+    """
+
     # Create an argument (flag) parser
     parser = argparse.ArgumentParser(
         prog="Python NEDI",
@@ -101,13 +106,25 @@ _cv2_saving_options: list[int] = [
 ]
 
 
-def _cli_process_file(input_path: str, scale: float, m: int, output_path: str):
+def _cli_process_file(input_path: str, scale: float, m: int, output_path: str) -> None:
+    """
+    Process an image file using the NEDI algorithm.
+
+    :param input_path: The path to the input image file.
+    :param scale: The scale factor to use for the NEDI algorithm.
+    :param m: The sampling window size for the NEDI algorithm.
+    :param output_path: The path to the output image file.
+    """
+    # Read the image from the input path using OpenCV
     img = cv2.imread(input_path, cv2.IMREAD_UNCHANGED)
 
     # Check if the image has multiple channels
     if len(img.shape) == 2:
+        # If the image is grayscale, use the raw edi_predict single-channel function
         img = edi_predict(img, m, scale)
     else:
+        # If the image is multi-channel, use the edi_predict_multichannel function
         img = edi_predict_multichannel(img, m, scale)
 
+    # Save the processed image to the output path
     cv2.imwrite(output_path, img, _cv2_saving_options)

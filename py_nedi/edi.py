@@ -80,7 +80,6 @@ def _multichannel_multiprocess(
         # Run function in parallel
         with ctx.Pool(processes=channels) as pool:
             mp_args = [(img[:, :, i], *args) for i in range(channels)]
-            print(f"{len(args)=}; {len(mp_args[0])=}")
             results = pool.map(function, mp_args)
 
         # Parse results

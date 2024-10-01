@@ -22,9 +22,9 @@ Usage:
     # If s < 2 linear interpolation is used, if s > 2 NEDI is used
 
     # img is the input single channel image (e.g. grayscale)
-    # m is the sampling window size, not scaling factor! The larger the m, more blurry the image. Ideal m >= 4
+    # m is the sampling window size, not scaling factor! The larger the m, more blurry the image. Ideal `m` >= 4. `m` should be the multiple of 2. If `m` is odd, it will be incremented by 1.
     # m should be the multiple of 2. If m is odd, it will be incremented by 1
-    # s is the scaling factor, support any s > 0 (e.g. use s=2 to upscale by 2, use s=0.5 to downscale by 2)
+    # s is the scaling factor, supports any `s` > 0 (e.g. use `s = 2` to upscale by 2, use `s = 0.5` to downscale by 2)
 
 
     edi_predict_multichannel(img, m, s)
@@ -33,7 +33,7 @@ Usage:
     # If s < 2 linear interpolation is used, if s > 2 NEDI is used
 
     # img is the input multi-channel image
-    # m is the sampling window size, not scaling factor! The larger the m, more blurry the image. Ideal m >= 4
+    # m is the sampling window size, not scaling factor! The larger the m, more blurry the image. Ideal `m` >= 4. `m` should be the multiple of 2. If `m` is odd, it will be incremented by 1.
     # m should be the multiple of 2. If m is odd, it will be incremented by 1
     # s is the scaling factor, support any s > 0 (e.g. use s=2 to upscale by 2, use s=0.5 to downscale by 2)
 
@@ -98,7 +98,7 @@ def edi_upscale(img: np.ndarray, m: int) -> np.ndarray:
         NEDI is an edge-directed technique that is based on the idea of interpolating the missing high-frequency components.
 
         :param img: Single channel image
-        :param m: Sampling window size. The larger the `m`, the more blurry the image, but better the edges. Ideal m >= 4. `m` should be the multiple of 2. If m is odd, it will be incremented by 1
+        :param m: Sampling window size. The larger the `m`, the more blurry the image, but better the edges. Ideal `m` >= 4. `m` should be the multiple of 2. If m is odd, it will be incremented by 1
         :return: Upscaled single channel image
     """
     # `m` should be equal to a multiple of 2
@@ -177,10 +177,27 @@ def edi_upscale_multichannel(
         multiprocess: bool = True,
         mode_override: str | None = None
 ) -> np.ndarray:
+    """
+        Upscales a multi-channel image using the NEDI algorithm.
+
+        :param img: The input multi-channel image.
+        :param m: The sampling window size, not scaling factor! The larger the m, more blurry the image. Ideal `m` >= 4. `m` should be the multiple of 2. If `m` is odd, it will be incremented by 1.
+        :param multiprocess: Whether to use multiprocessing or not. Defaults to True
+        :param mode_override: The multiprocessing mode to use. Defaults to None, which uses the mode set by multiprocessing.set_start_method()
+        :return: The 2x upscaled image
+    """
     return _multichannel_multiprocess(_edi_upscale_channel, img, multiprocess, mode_override, m)
 
 
 def edi_predict(img: np.ndarray, m: int, s: float) -> np.ndarray:
+    """
+        Upscales a single channel image using the NEDI algorithm.
+
+        :param img: The input single channel image.
+        :param m: The sampling window size, not scaling factor! The larger the `m`, more blurry the image. Ideal `m` >= 4. `m` should be the multiple of 2. If `m` is odd, it will be incremented by 1.
+        :param s: The scaling factor, support any `s` > 0 (e.g. use `s = 2` to upscale by 2, use `s = 0.5` to downscale by 2)
+        :return: The upscaled image
+    """
     try:
         w, h = img.shape
     except ValueError as e:
@@ -232,4 +249,14 @@ def edi_predict_multichannel(
         multiprocess: bool = True,
         mode_override: str | None = None
 ) -> np.ndarray:
+    """
+        Upscales a multi-channel image using the NEDI algorithm.
+
+        :param img: The input multi-channel image.
+        :param m: The sampling window size, not scaling factor! The larger the `m`, more blurry the image. Ideal `m` >= 4. `m` should be the multiple of 2. If `m` is odd, it will be incremented by 1.
+        :param s: The scaling factor, support any `s` > 0 (e.g. use `s = 2` to upscale by 2, use `s = 0.5` to downscale by 2)
+        :param multiprocess: Whether to use multiprocessing or not. Defaults to True
+        :param mode_override: The multiprocessing mode to use. Defaults to None, which uses the mode set by multiprocessing.set_start_method()
+        :return: The upscaled image
+    """
     return _multichannel_multiprocess(_edi_predict_channel, img, multiprocess, mode_override, m, s)

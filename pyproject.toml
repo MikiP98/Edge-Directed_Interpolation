@@ -36,4 +36,4 @@ Repository = "https://github.com/MikiP98/Edge-Directed_Interpolation"
 Issues = "https://github.com/Kirstihly/Edge-Directed_Interpolation/issues"
 
 [project.scripts]
-nedi_process = "py_nedi.edi:_edi_cli"
+nedi_process = "py_nedi.cli:_edi_cli"

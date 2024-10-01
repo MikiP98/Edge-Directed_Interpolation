@@ -2,7 +2,6 @@
 import cv2
 import math
 import numpy as np
-import os
 
 from typing import Callable
 
@@ -53,11 +52,21 @@ Usage:
 def _multichannel_multiprocess(
         function: Callable[[np.ndarray, ...], np.ndarray],
         img: np.ndarray,
-        s: float,
         multiprocess: bool = True,
         mode_override: str | None = "spawn",
         *args
 ) -> np.ndarray:
+    """
+    This function helps to process individual channels of a multi-channel image in parallel.
+
+    :param function: The function to be processed in parallel. Should take a single channel image and any additional arguments
+    :param img: The input multi-channel image
+    :param multiprocess: Whether to use multiprocessing or not. Defaults to True
+    :param mode_override: The multiprocessing mode to use. Defaults to None, which uses the mode set by multiprocessing.set_start_method()
+    :param args: Any additional arguments to pass to the function
+    :return: The processed image
+    """
+
     import multiprocessing
 
     w, h, channels = img.shape
@@ -86,17 +95,17 @@ def _multichannel_multiprocess(
 
 def edi_upscale(img: np.ndarray, m: int) -> np.ndarray:
     """
-        Actual NEDI upscaling function. Scales the image by the factor of 2
+        Implementation of New Edge-Directed Interpolation (NEDI) for upscaling an image by a factor of 2.
+        NEDI is an edge-directed technique that is based on the idea of interpolating the missing high-frequency components.
 
         :param img: Single channel image
-        :param m: Sampling window size. The larger the m, more blurry the image. Ideal m >= 4.
-            m should be the multiple of 2. If m is odd, it will be incremented by 1
+        :param m: Sampling window size. The larger the `m`, the more blurry the image, but better the edges. Ideal m >= 4. `m` should be the multiple of 2. If m is odd, it will be incremented by 1
         :return: Upscaled single channel image
     """
-    # m should be equal to a multiple of 2
+    # `m` should be equal to a multiple of 2
     # assert (m % 2 == 0)
-    if m % 2 == 1:
-        m += 1
+    m += m % 2  # Increment `m` by 1 if it is odd
+    # m &= ~1  # More optimized, but decrements `m` by 1 if it is odd instead of incrementing by 1
 
     # initializing image to be predicted
     w, h = img.shape
@@ -169,7 +178,7 @@ def edi_upscale_multichannel(
         multiprocess: bool = True,
         mode_override: str | None = None
 ) -> np.ndarray:
-    return _multichannel_multiprocess(_edi_upscale_channel, img, 2, multiprocess, mode_override, m)
+    return _multichannel_multiprocess(_edi_upscale_channel, img, multiprocess, mode_override, m)
 
 
 def edi_predict(img: np.ndarray, m: int, s: float) -> np.ndarray:
@@ -224,129 +233,4 @@ def edi_predict_multichannel(
         multiprocess: bool = True,
         mode_override: str | None = None
 ) -> np.ndarray:
-    return _multichannel_multiprocess(_edi_predict_channel, img, s, multiprocess, mode_override, m, s)
-
-
-def _edi_cli():
-    import argparse
-
-    # Create an argument (flag) parser
-    parser = argparse.ArgumentParser(
-        prog="Python NEDI",
-        description="Python NEDI implementation",
-        epilog="Please consider acknowledging this small project for research use. Thank you!",
-    )
-
-    # Add arguments
-    parser.add_argument('-s', "--scale", type=float, default=2)
-    parser.add_argument('-m', "--m", type=int, default=4)
-    parser.add_argument('-i', "--input", type=str, default=None, help="Path to the input file or directory")
-    parser.add_argument('-o', "--output", type=str, default=None, help="Path to the output file or directory")
-    parser.add_argument('-r', "--recursive", action="store_true", default=False)
-
-    # Parse arguments
-    args = parser.parse_args()
-
-    scale: float = args.scale
-    m: int = args.m
-
-    input_path: str | None = args.input
-    if input_path is None:
-        # Set the input directory to be the current working directory
-        input_path = os.getcwd()
-
-    output_path: str | None = args.output
-    if output_path is None:
-        # Check if the input path is a directory
-        if os.path.isdir(input_path):
-            output_path = os.path.join(input_path, "output")
-            os.makedirs(output_path, exist_ok=True)
-        else:
-            output_path = f"scaled_{input_path}"
-
-    recursive: bool = args.recursive
-
-    print("Loaded all arguments/flags")
-
-    # Process files
-    # Check if the input path is a directory
-    if os.path.isdir(input_path):
-        cv2_supported_extensions = {"png", "jpg", "jpeg", "tiff", "tif"}
-
-        if not recursive:
-            # Check all files in the input directory
-            for filename in os.listdir(os.getcwd()):
-                # Check if the file has supported file extension
-                extension = filename.split('.')[-1]
-                if extension in cv2_supported_extensions:
-                    input_file = os.path.join(input_path, filename)
-
-                    if os.path.isdir(output_path):
-                        output_file = os.path.join(output_path, f"scaled_{filename}")
-                    else:
-                        output_file = os.path.join(input_path, f"scaled_{filename}", output_path)
-
-                    print("Found an image to process; Processing...")
-                    _cli_process_file(input_file, scale, m, output_file)
-
-        else:
-            for root, _, files in os.walk(input_path):
-                for filename in files:
-                    # Check if the file has supported file extension
-                    extension = filename.split('.')[-1]
-                    if extension in cv2_supported_extensions:
-                        input_file = os.path.join(input_path, filename)
-
-                        if os.path.isdir(output_path):
-                            output_file = os.path.join(root, output_path, f"scaled_{filename}")
-                        else:
-                            output_file = os.path.join(root, input_path, f"scaled_{filename}", output_path)
-
-                        print("Found an image to process; Processing...")
-                        _cli_process_file(input_file, scale, m, output_file)
-    else:
-        # The path is a file
-        print("Found an image to process; Processing...")
-        _cli_process_file(input_path, scale, m, output_path)
-
-    print("Finished")
-
-
-# Initialize universal CV2 saving options
-_cv2_saving_options: list[int] = [
-    cv2.IMWRITE_PNG_COMPRESSION, 9,  # Highest
-    cv2.IMWRITE_TIFF_COMPRESSION, 32946,  # Deflate
-    cv2.IMWRITE_JPEG_QUALITY, 95,
-    cv2.IMWRITE_WEBP_QUALITY, 100  # Lossless
-]
-
-
-def _cli_process_file(input_path: str, scale: float, m: int, output_path: str):
-    img = cv2.imread(input_path, cv2.IMREAD_UNCHANGED)
-
-    # Check if the image has multiple channels
-    if len(img.shape) == 2:
-        img = edi_predict(img, m, scale)
-    else:
-        img = edi_predict_multichannel(img, m, scale)
-
-    cv2.imwrite(output_path, img, _cv2_saving_options)
-
-
-# Internal testing
-if __name__ == "__main__":
-    img = cv2.imread("images/math_psnr.png", cv2.IMREAD_UNCHANGED)
-
-    try:
-        edi_upscale(img, 4)
-    except ValueError as e:
-        assert str(e) == "too many values to unpack (expected 2)"
-    else:
-        raise Exception("Test failed")
-
-    try:
-        edi_predict(img, 4, 2)
-    except ValueError as e:
-        assert str(e) == "Error: Invalid input; Please input a valid single channel image!"
-    else:
-        raise Exception("Test failed")
+    return _multichannel_multiprocess(_edi_predict_channel, img, multiprocess, mode_override, m, s)

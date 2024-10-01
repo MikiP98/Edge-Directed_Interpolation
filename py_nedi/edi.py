@@ -57,14 +57,14 @@ def _multichannel_multiprocess(
         *args
 ) -> np.ndarray:
     """
-    This function helps to process individual channels of a multi-channel image in parallel.
+        This function helps to process individual channels of a multi-channel image in parallel.
 
-    :param function: The function to be processed in parallel. Should take a single channel image and any additional arguments
-    :param img: The input multi-channel image
-    :param multiprocess: Whether to use multiprocessing or not. Defaults to True
-    :param mode_override: The multiprocessing mode to use. Defaults to None, which uses the mode set by multiprocessing.set_start_method()
-    :param args: Any additional arguments to pass to the function
-    :return: The processed image
+        :param function: The function to be processed in parallel. Should take a single channel image and any additional arguments
+        :param img: The input multi-channel image
+        :param multiprocess: Whether to use multiprocessing or not. Defaults to True
+        :param mode_override: The multiprocessing mode to use. Defaults to None, which uses the mode set by multiprocessing.set_start_method()
+        :param args: Any additional arguments to pass to the function
+        :return: The processed image
     """
 
     import multiprocessing
@@ -104,7 +104,7 @@ def edi_upscale(img: np.ndarray, m: int) -> np.ndarray:
     # `m` should be equal to a multiple of 2
     # assert (m % 2 == 0)
     m += m % 2  # Increment `m` by 1 if it is odd
-    # m &= ~1  # More optimized, but decrements `m` by 1 if it is odd instead of incrementing by 1
+    # m &= ~1  # More optimized, but decrements `m` by 1 if it is odd, instead of incrementing by 1
 
     # initializing image to be predicted
     w, h = img.shape
